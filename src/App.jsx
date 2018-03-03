@@ -1,24 +1,36 @@
 import React, { Component } from 'react';
 
 
+// ---LIST ITEM---
 class ListItem extends Component {
   constructor(props) {
     super(props);
 
+    this.state = {
+      isEditing: false,
+      task: this.props.task,
+      priority: this.props.priority,
+    }
+
     this.liClassString = this.liClassString.bind(this);
     this.handleEditClick = this.handleEditClick.bind(this);
+    this.handleSaveClick = this.handleSaveClick.bind(this);
+    this.handleInputChange = this.handleInputChange.bind(this);
+    this.buildListItem = this.buildListItem.bind(this);
   }
 
   liClassString() {
-    switch(this.props.priority) {
+    var cssClass = this.state.isEditing ? "toDoEdit" : "toDo";
+
+    switch(this.state.priority) {
       case "1":
-        return "list-group-item list-group-item-success toDo";
+        return `list-group-item list-group-item-success ${cssClass}`;
 
       case "2":
-        return "list-group-item list-group-item-warning toDo";
+        return `list-group-item list-group-item-warning ${cssClass}`;
 
       case "3":
-        return "list-group-item list-group-item-danger toDo";
+        return `list-group-item list-group-item-danger ${cssClass}`;
 
       default:
         console.log("hit liClassString() switch default")
@@ -27,29 +39,94 @@ class ListItem extends Component {
   }
 
 
-  handleEditClick(event) {
-    console.log("edit clicked", this.props.task);
+  handleEditClick() { 
+    this.setState({ isEditing: true }); 
+  }
+
+
+  handleSaveClick(event) { 
+    event.preventDefault();
+    this.setState({ isEditing: false }); 
+  }
+
+  handleInputChange(event) {
+    const target = event.target;
+    const value = target.type === 'checkbox' ? target.checked : target.value;
+    const name = target.name;
+
+    this.setState({
+      [name]: value
+    });
+  }
+
+
+  buildListItem() {
+    if(this.state.isEditing) {
+      return (
+        <li className={this.liClassString()}>
+          <form onSubmit={this.handleSaveClick}>
+              <div className="row">
+                <label className="form-group font-weight-bold col-md-12">
+                  Description
+                  <textarea 
+                    name="task" 
+                    className="form-control update-todo-text" 
+                    rows="3" 
+                    value = {this.state.task}
+                    onChange={this.handleInputChange}
+                  ></textarea>
+                </label>
+              </div>
+
+              <div className="row">
+                <label className="form-group font-weight-bold col-md-6">
+                  Priority
+
+                  <select 
+                    name="priority"
+                    className="form-control update-todo-priority"
+                    value={this.state.priority}
+                    onChange={this.handleInputChange}
+                  >
+                    <option value="1">Low Priority</option>
+                    <option value="2">Medium Priority</option>
+                    <option value="3">High Priority</option>
+                  </select>
+                </label>
+              </div>
+
+              <div className="row" id="save-button">
+                <button className="btn btn-success rounded update-todo" type="submit">Save</button>
+              </div>
+          </form>
+        </li>
+      );
+    } else {
+      return (
+        <li className={this.liClassString()}>
+          <span>
+            <input type="checkbox" />
+            {this.state.task} 
+          </span>
+
+          <span>
+            <i className="edit fas fa-edit edit-todo" onClick={this.handleEditClick} ></i>
+            <i className="delete fas fa-trash-alt delete-todo" onClick={this.props.handleDeleteClick}></i>
+          </span>
+        </li>
+      );
+    }
   }
 
 
   render() {
-    return(
-      <li className={this.liClassString()}>
-        <span>
-          <input type="checkbox" />
-          {this.props.task} 
-        </span>
-        
-        <span>
-          <i className="edit fas fa-edit" onClick={this.handleEditClick} ></i>
-          <i className="delete fas fa-trash-alt" onClick={this.props.handleDeleteClick}></i>
-        </span>
-      </li>
-    );
+    return(this.buildListItem());
   }
 }
 
 
+
+// ---APP---
 class App extends Component {
   constructor() {
     super();
@@ -110,14 +187,12 @@ class App extends Component {
 
 
   handleSubmit(event) {
-    console.log(this);
     event.preventDefault();
     this.addListItem(this.state.task, this.state.priority);
   }
 
 
   handleChange(event) {
-    console.log(event.target);
     this.setState({ [event.name.value]: event.target.value });
   }
 
@@ -200,7 +275,7 @@ class App extends Component {
                 </div>
                 
                 <div className="card-footer">
-                  <button className="btn-block btn-success rounded" type="submit">Add</button>
+                  <button className="btn-block btn-success rounded create-todo" type="submit">Add</button>
                 </div>
               </div>
             </form>
