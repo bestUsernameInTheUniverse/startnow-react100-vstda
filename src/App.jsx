@@ -5,7 +5,47 @@ class ListItem extends Component {
   constructor(props) {
     super(props);
 
-    //component variables
+    this.liClassString = this.liClassString.bind(this);
+    this.handleEditClick = this.handleEditClick.bind(this);
+  }
+
+  liClassString() {
+    switch(this.props.priority) {
+      case "1":
+        return "list-group-item list-group-item-success toDo";
+
+      case "2":
+        return "list-group-item list-group-item-warning toDo";
+
+      case "3":
+        return "list-group-item list-group-item-danger toDo";
+
+      default:
+        console.log("hit liClassString() switch default")
+        return "";
+    }
+  }
+
+
+  handleEditClick(event) {
+    console.log("edit clicked", this.props.task);
+  }
+
+
+  render() {
+    return(
+      <li className={this.liClassString()}>
+        <span>
+          <input type="checkbox" />
+          {this.props.task} 
+        </span>
+        
+        <span>
+          <i className="edit fas fa-edit" onClick={this.handleEditClick} ></i>
+          <i className="delete fas fa-trash-alt" onClick={this.props.handleDeleteClick}></i>
+        </span>
+      </li>
+    );
   }
 }
 
@@ -16,6 +56,7 @@ class App extends Component {
 
     this.state = {
       todoList: [],
+      keyList: [],
       task: "",
       priority: 0
     }
@@ -25,7 +66,6 @@ class App extends Component {
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleInputChange = this.handleInputChange.bind(this);
     this.getNewId = this.getNewId.bind(this);
-    this.handleDeleteClick = this.handleDeleteClick.bind(this);
   }
 
 
@@ -46,50 +86,31 @@ class App extends Component {
 
 
   addListItem(task, priority) {
-    var classString = "";
-    switch(priority) {
-      case "1":
-        classString = "list-group-item list-group-item-success toDo";
-        break;
-
-      case "2":
-        classString = "list-group-item list-group-item-warning toDo";
-        break;
-
-      case "3":
-        classString = "list-group-item list-group-item-danger toDo";
-        break;
-
-      default:
-        console.log("panic!")
-        return;
-    }
-
+    var keyName = this.getNewId().next().value
     const newListItem = (
-      <li key={this.getNewId().next().value} className={classString}>
-        <span>
-          <input type="checkbox" />
-          {task} 
-        </span>
-        
-        <span>
-          <i className="edit fas fa-edit"></i>
-          <i className="delete fas fa-trash-alt" onClick={this.handleDeleteClick}></i>
-        </span>
-      </li>
-    );
+      <ListItem
+        key={keyName}
+        keyCopy={keyName}
+        task={this.state.task}
+        priority={this.state.priority}
+        handleDeleteClick={(keyName) => this.handleDeleteClick(keyName)}
+      />);
 
-    const myList = this.highID == 1 ? [] : this.state.todoList;
+    const myTodoList = this.highID == 1 ? [] : this.state.todoList;
+    const myKeyList = this.state.keyList;
 
-    myList.push(newListItem);
+    myTodoList.push(newListItem);
+    myKeyList.push(keyName);
 
     this.setState({
-      todoList: myList
+      todoList: myTodoList,
+      keyList: myKeyList
     });
   }
 
 
   handleSubmit(event) {
+    console.log(this);
     event.preventDefault();
     this.addListItem(this.state.task, this.state.priority);
   }
@@ -112,8 +133,19 @@ class App extends Component {
   }
 
 
-  handleDeleteClick(event) {
+  handleDeleteClick(keyName) {
+    var myTodoList = this.state.todoList;
+    var myKeyList = this.state.keyList;
 
+    var index = myKeyList.findIndex((key, keyName) => {key == keyName});
+    
+    myTodoList.splice(index -1, 1);
+    myKeyList.splice(index -1, 1);
+
+    this.setState({
+      todoList: myTodoList,
+      keyList: myKeyList
+    })
   }
 
 
